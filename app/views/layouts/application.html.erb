@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Rinvsched</title>
+  <%= stylesheet_link_tag    "application", :media => "all" %>
+  <%= javascript_include_tag "application" %>
+  <%= csrf_meta_tags %>
+  <link rel="shortcut icon" href="/assets/favicon.png"/>
+  	<style type="text/css">
+          /*html, body {height:100%; margin:0; padding:0;}*/
+          .static {position:relative; z-index:0;}
+
+          .drag {position: absolute; cursor: move; z-index:1;}
+	</style>
+</head>
+<body>
+<div id="railsLogo" class="dinline"><%= image_tag "logo.png" %></div><div class="dinline2">
+<center><h1> Parts Inventory Schedule </h1></center>
+</div><div class="dinline">.                .</div>
+<div class="bb"></div>
+<%= yield %>
+<div class="footer"></div>
+</body>
+</html>
