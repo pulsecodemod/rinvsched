@@ -1,0 +1,241 @@
+<!--h2> Parts Inventory Schedule </h2-->
+<div id="ctl-header">
+<div id="navbar" class="nav" role="navigation">
+  <p>&nbsp;</p>
+  <ul>
+    <li><%= tag "input", { "type" => "button", "value" => "GO!", "onclick" => "Junk()", "class" => "rounded-corners", "title" =>"GO!"} %>
+
+<!--%=  button_tag(:type => 'button') do
+          content_tag(:strong, 'GO!')
+        end %-->
+    </li>
+    <li><%=  button_tag(:type => 'button') do
+          'Commit'
+        end %></li>
+    <li><%=  button_tag(:type => 'button') do
+          'Reset'
+        end %></li>
+    <li><%=  button_tag(:type => 'button') do
+          'Search'
+        end %></li>
+    <li><%=  button_tag(:type => 'button') do
+           'Load'
+        end %></li>
+    <li>Filter: <%= select_tag "qtype", "<option>none</option><option>tp</option><option>atm</option><option>pts</option><option>nopts</option><option>short</option>".html_safe %> </li> <!--, :multiple => true -->
+    <li>Sort: <%= select_tag "stype", "<option>negstkdate</option><option>inverted</option><option>partno</option>".html_safe %></li>
+    <li>Days: <%=  text_field_tag 'days', '60', :size => 1 %></li>
+    <li>PO <%=  check_box_tag 'showpo'%></li>
+    <li>OR <%=  check_box_tag  'showor'%></li>
+    <li>WM <%=  check_box_tag  'showwm'%></li>
+    <li>Lock <%= check_box_tag 'showlock' %></li>
+  </ul>
+</div>
+<div id="statwin" class="statwin"></div>
+  <div id="legend" class="legend"><h2> Legend</h2><img src="/assets/po.png"></img> <img src="/assets/or.png"></img> 
+<img src="/assets/wm.png"></img><img src="/assets/mlt.png"></img> 
+</div>
+</div>
+<div id="part-list" class="plist">
+<pre id="debug"> </pre>
+<% pcount = 0 ; mtrhash = {};mcount = 0;parthash = {} %>
+<% @parts.each do |part|%>
+  <% parthash = { "pnum" => part.part_id, "picount" => part.estock, "reddate" => part.negstkdate, "assy" => part.assy, "descr" => part.descr } %>
+  <p>
+
+  <% if part.assy %>
+    <!--                                                   , "onclick" => "ToggleShowAssyPart(#{part.part_id}),#{part.mtrs.count()})"                             -->
+    <%= label_tag part.part_id, part.part_id, "onmouseover" => "StatwinPart(#{part.part_id},#{part.mtrs.count()})", "onclick" => "ToggleShowAssyPart(#{part.part_id},#{part.mtrs.count()})", "title" =>"q0:#{part.estock}",  "class" => "label-assy" %>
+    <!--%= tag "input", { "type" => "button", "value" => "#{part.part_id}", "onmouseover" => "StatwinPart(#{part.part_id},#{part.mtrs.count()})", "onclick" => "ToggleShowAssyPart(#{part.part_id})",  "class" => "rounded-assy", "title" =>"q0:#{part.estock}"} %-->
+  <% else %>
+    <!--%= tag "input", { "type" => "button", "value" => "#{part.part_id}", "onmouseover" => "StatwinPart(#{part.part_id},#{part.mtrs.count()})", "class" => "rounded-corners", "title" =>"q0:#{part.estock}"} %-->
+    <%= label_tag part.part_id, part.part_id, "onmouseover" => "StatwinPart(#{part.part_id},#{part.mtrs.count()})", "title" =>"q0:#{part.estock}",  "class" => "label-part" %>
+  <% end %>
+
+  <% part.mtrs.each do |mtr| %>
+    <% mtrhash = { "mtrnum" => mtr.mtrnum, "odd" => mtr.odd.to_i, "ttip" => mtr.ttip, "ttype" => mtr.ttype, "pcount" => pcount.to_i, "picount" => part.estock } %>
+    <% if in_window(mtrhash) %>
+    <%= raw mtr_tag(mtrhash) %>
+    <% end %>
+
+    <% mcount = mcount + 1 %>
+  <% end %>
+  <%= label_tag pcount, pcount %><% pcount = pcount + 1 %> </p>
+  <% if part.assy %>
+    <%= raw assydiv_tag(part.part_id) %>
+  <% end %>
+<% end %>
+</div>
+<script language="JavaScript" type="text/javascript">
+<!--
+
+// this is simply a shortcut for the eyes and fingers
+function $(id)
+{
+	return document.getElementById(id);
+}
+
+var _startX = 0;			// mouse starting positions
+var _startY = 0;
+var _offsetX = 0;			// current element offset
+var _offsetY = 0;
+var _dragElement;			// needs to be passed from OnMouseDown to OnMouseMove
+var _oldZIndex = 0;			// we temporarily increase the z-index during drag
+var _debug = $('debug');	// makes life easier
+
+
+InitDragDrop();
+
+function InitDragDrop()
+{
+	document.onmousedown = OnMouseDown;
+	document.onmouseup = OnMouseUp;
+}
+
+function OnMouseDown(e)
+{
+	// IE is retarded and doesn't pass the event object
+	if (e == null)
+		e = window.event;
+
+	// IE uses srcElement, others use target
+	var target = e.target != null ? e.target : e.srcElement;
+
+	_debug.innerHTML = target.className == 'drag'
+		? 'draggable element clicked'
+		: 'NON-draggable element clicked';
+
+	// for IE, left click == 1
+	// for Firefox, left click == 0
+	if ((e.button == 1 && window.event != null ||
+		e.button == 0) &&
+		target.className == 'drag')
+	{
+		// grab the mouse position
+		_startX = e.clientX;
+		_startY = e.clientY;
+
+		// grab the clicked element's position
+		_offsetX = ExtractNumber(target.style.left);
+		_offsetY = ExtractNumber(target.style.top);
+
+		// bring the clicked element to the front while it is being dragged
+		_oldZIndex = target.style.zIndex;
+		target.style.zIndex = 10000;
+
+		// we need to access the element in OnMouseMove
+		_dragElement = target;
+
+		// tell our code to start moving the element with the mouse
+		document.onmousemove = OnMouseMove;
+
+		// cancel out any text selections
+		document.body.focus();
+
+		// prevent text selection in IE
+		document.onselectstart = function () { return false; };
+		// prevent IE from trying to drag an image
+		target.ondragstart = function() { return false; };
+
+		// prevent text selection (except IE)
+		return false;
+	}
+}
+
+function ExtractNumber(value)
+{
+	var n = parseInt(value);
+
+	return n == null || isNaN(n) ? 0 : n;
+}
+
+function OnMouseMove(e)
+{
+	if (e == null)
+		var e = window.event;
+
+	// this is the actual "drag code"
+	_dragElement.style.left = (_offsetX + e.clientX - _startX) + 'px';
+	//_dragElement.style.top = (_offsetY + e.clientY - _startY) + 'px';
+
+	_debug.innerHTML = '(' + _dragElement.style.left + ', ' + _dragElement.style.top + ')';
+}
+
+function OnMouseUp(e)
+{
+	if (_dragElement != null)
+	{
+		_dragElement.style.zIndex = _oldZIndex;
+
+		// we're done with these events until the next OnMouseDown
+		document.onmousemove = null;
+		document.onselectstart = null;
+		_dragElement.ondragstart = null;
+
+		// this is how we know we're not dragging
+		_dragElement = null;
+
+		_debug.innerHTML = 'mouse up';
+	}
+}
+
+function PartData(pno)
+{
+  alert ('Part:'+pno); return true;
+}
+function ToggleShowAssyPart(pno){
+  var eid = "assy-part-" + pno;
+  var msg = document.getElementById(eid);
+  var cstate = msg.style.display;
+  //alert ('ToggleAssyPart:'+cstate);
+  if (cstate == "block") {
+    msg.style.display="none"; //block
+  } else {
+    msg.style.display="block"; //none
+  }
+}
+function StatwinPart(pno, mcount){
+  var wndw = document.getElementById("statwin");
+  //wndw.innerHTML = "<p>"+pno + pno +pno +pno +pno +pno +pno +pno +pno +pno "</p>" +"<p>"+pno + "</p>"+"<p>"+pno + "</p>"+"<p>"+pno + "</p>"+"<p>"+pno + "</p>"+"<p>"+pno + "</p>"+"<p>"+pno + "</p>"+"<p>"+pno + "</p>";
+  wndw.innerHTML = 'pno:' + pno +' MTRcount:' + mcount ;
+  /*wndw.innerHTML = wndw.innerHTML + pno +' pno lkjsadflkjsdflkjsfd sdalkjsdfj asdlkjsdlkjasdlkj /n sfd asfd sdfj dsjlkjdfsaklj fds sfd sfdjkdfslkjsdflkjsdf dfs ' +pno + ' this is a test - now is the time for all good men to come to the aid of their country.';
+  wndw.innerHTML = wndw.innerHTML + pno +' pno lkjsadflkjsdflkjsfd sdalkjsdfj asdlkjsdlkjasdlkj /n sfd asfd sdfj dsjlkjdfsaklj fds sfd sfdjkdfslkjsdflkjsdf dfs ' +pno + ' this is a test - now is the time for all good men to come to the aid of their country.';
+  wndw.innerHTML = wndw.innerHTML + pno +' pno lkjsadflkjsdflkjsfd sdalkjsdfj asdlkjsdlkjasdlkj /n sfd asfd sdfj dsjlkjdfsaklj fds sfd sfdjkdfslkjsdflkjsdf dfs ' +pno + ' this is a test - now is the time for all good men to come to the aid of their country.';
+  wndw.innerHTML = wndw.innerHTML + pno +' pno lkjsadflkjsdflkjsfd sdalkjsdfj asdlkjsdlkjasdlkj /n sfd asfd sdfj dsjlkjdfsaklj fds sfd sfdjkdfslkjsdflkjsdf dfs ' +pno + ' this is a test - now is the time for all good men to come to the aid of their country.';
+  wndw.innerHTML = wndw.innerHTML + pno +' pno lkjsadflkjsdflkjsfd sdalkjsdfj asdlkjsdlkjasdlkj /n sfd asfd sdfj dsjlkjdfsaklj fds sfd sfdjkdfslkjsdflkjsdf dfs ' +pno + ' this is a test - now is the time for all good men to come to the aid of their country.';
+  wndw.innerHTML = wndw.innerHTML + pno +' pno lkjsadflkjsdflkjsfd sdalkjsdfj asdlkjsdlkjasdlkj /n sfd asfd sdfj dsjlkjdfsaklj fds sfd sfdjkdfslkjsdflkjsdf dfs ' +pno + ' this is a test - now is the time for all good men to come to the aid of their country.';
+  wndw.innerHTML = wndw.innerHTML + pno +' pno lkjsadflkjsdflkjsfd sdalkjsdfj asdlkjsdlkjasdlkj /n sfd asfd sdfj dsjlkjdfsaklj fds sfd sfdjkdfslkjsdflkjsdf dfs ' +pno + ' this is a test - now is the time for all good men to come to the aid of their country.';
+  wndw.innerHTML = wndw.innerHTML + pno +' pno lkjsadflkjsdflkjsfd sdalkjsdfj asdlkjsdlkjasdlkj /n sfd asfd sdfj dsjlkjdfsaklj fds sfd sfdjkdfslkjsdflkjsdf dfs ' +pno + ' this is a test - now is the time for all good men to come to the aid of their country.';*/
+  //wndw.innerHTML = pno;
+  document.getElementById("legend").focus();
+  document.body.focus();
+}
+function StatwinMtr(mtr, q0){
+  var wndw = document.getElementById("statwin");
+  //wndw.innerHTML = "<p>"+pno + pno +pno +pno +pno +pno +pno +pno +pno +pno "</p>" +"<p>"+pno + "</p>"+"<p>"+pno + "</p>"+"<p>"+pno + "</p>"+"<p>"+pno + "</p>"+"<p>"+pno + "</p>"+"<p>"+pno + "</p>"+"<p>"+pno + "</p>";
+  wndw.innerHTML = 'MTR:' + mtr +' Inventory:' + q0;
+  /*wndw.innerHTML = wndw.innerHTML + pno +' pno lkjsadflkjsdflkjsfd sdalkjsdfj asdlkjsdlkjasdlkj /n sfd asfd sdfj dsjlkjdfsaklj fds sfd sfdjkdfslkjsdflkjsdf dfs ' +pno + ' this is a test - now is the time for all good men to come to the aid of their country.';
+  wndw.innerHTML = wndw.innerHTML + pno +' pno lkjsadflkjsdflkjsfd sdalkjsdfj asdlkjsdlkjasdlkj /n sfd asfd sdfj dsjlkjdfsaklj fds sfd sfdjkdfslkjsdflkjsdf dfs ' +pno + ' this is a test - now is the time for all good men to come to the aid of their country.';
+  wndw.innerHTML = wndw.innerHTML + pno +' pno lkjsadflkjsdflkjsfd sdalkjsdfj asdlkjsdlkjasdlkj /n sfd asfd sdfj dsjlkjdfsaklj fds sfd sfdjkdfslkjsdflkjsdf dfs ' +pno + ' this is a test - now is the time for all good men to come to the aid of their country.';
+  wndw.innerHTML = wndw.innerHTML + pno +' pno lkjsadflkjsdflkjsfd sdalkjsdfj asdlkjsdlkjasdlkj /n sfd asfd sdfj dsjlkjdfsaklj fds sfd sfdjkdfslkjsdflkjsdf dfs ' +pno + ' this is a test - now is the time for all good men to come to the aid of their country.';
+  wndw.innerHTML = wndw.innerHTML + pno +' pno lkjsadflkjsdflkjsfd sdalkjsdfj asdlkjsdlkjasdlkj /n sfd asfd sdfj dsjlkjdfsaklj fds sfd sfdjkdfslkjsdflkjsdf dfs ' +pno + ' this is a test - now is the time for all good men to come to the aid of their country.';
+  wndw.innerHTML = wndw.innerHTML + pno +' pno lkjsadflkjsdflkjsfd sdalkjsdfj asdlkjsdlkjasdlkj /n sfd asfd sdfj dsjlkjdfsaklj fds sfd sfdjkdfslkjsdflkjsdf dfs ' +pno + ' this is a test - now is the time for all good men to come to the aid of their country.';
+  wndw.innerHTML = wndw.innerHTML + pno +' pno lkjsadflkjsdflkjsfd sdalkjsdfj asdlkjsdlkjasdlkj /n sfd asfd sdfj dsjlkjdfsaklj fds sfd sfdjkdfslkjsdflkjsdf dfs ' +pno + ' this is a test - now is the time for all good men to come to the aid of their country.';
+  wndw.innerHTML = wndw.innerHTML + pno +' pno lkjsadflkjsdflkjsfd sdalkjsdfj asdlkjsdlkjasdlkj /n sfd asfd sdfj dsjlkjdfsaklj fds sfd sfdjkdfslkjsdflkjsdf dfs ' +pno + ' this is a test - now is the time for all good men to come to the aid of their country.';*/
+  //wndw.innerHTML = pno;
+  document.getElementById("legend").focus();
+  document.body.focus();
+}
+function Junk(){
+  var msg = document.getElementById('part-list');
+  var cstate = msg.pageYOffset;
+  /*if (cstate == "block") {
+    msg.style.display="none"; //block
+  } else {
+    msg.style.display="block"; //none
+  } */
+  alert ('ScrollPosition:'+cstate);
+}
+
+//-->
+	</script>
+

@@ -1,10 +1,13 @@
 <!--h2> Parts Inventory Schedule </h2-->
+<div id="ctl-header">
 <div id="navbar" class="nav" role="navigation">
   <p>&nbsp;</p>
   <ul>
-    <li><%=  button_tag(:type => 'button') do
+    <li><%= tag "input", { "type" => "button", "value" => "GO!", "onclick" => "Junk()", "class" => "rounded-corners", "title" =>"GO!"} %>
+
+<!--%=  button_tag(:type => 'button') do
           content_tag(:strong, 'GO!')
-        end %>
+        end %-->
     </li>
     <li><%=  button_tag(:type => 'button') do
           'Commit'
@@ -18,34 +21,26 @@
     <li><%=  button_tag(:type => 'button') do
            'Load'
         end %></li>
-    <li>Filter: <%= select_tag "qtype", "<option>none</option><option>tp</option><option>atm</option><option>pts</option><option>nopts</option><option>short</option>".html_safe, :multiple => true  %> </li>
+    <li>Filter: <%= select_tag "qtype", "<option>none</option><option>tp</option><option>atm</option><option>pts</option><option>nopts</option><option>short</option>".html_safe %> </li> <!--, :multiple => true -->
     <li>Sort: <%= select_tag "stype", "<option>negstkdate</option><option>inverted</option><option>partno</option>".html_safe %></li>
     <li>Days: <%=  text_field_tag 'days', '60', :size => 1 %></li>
     <li>PO <%=  check_box_tag 'showpo'%></li>
     <li>OR <%=  check_box_tag  'showor'%></li>
     <li>WM <%=  check_box_tag  'showwm'%></li>
     <li>Lock <%= check_box_tag 'showlock' %></li>
-  </ul><p>&nbsp;</p>
+  </ul>
 </div>
-<pre id="debug"> </pre>
-<% pcount = 0 ; mtrhash = {};mcount = 0 %>
-<% @parts.each do |part|%>
-<p> <!--%= link_to part.part_id, edit_part_path(part) %--> <!--%= part.mtrs.count() %-->&nbsp;&nbsp;<!--%= part.estock %-->
-<%= tag "input", { "type" => "button", "value" => "#{part.part_id}", "onclick" => "PartData(#{part.part_id})","class" => "rounded-corners" } %>
-<%= button_to "#{part.part_id}", "javascript:PartData(#{part.part_id})",{:style => "background: red" } %>
+  <div id="statwin-titles" class="swtitles"> </div>
+<div id="statwin" class="statwin"></div>
+  <div id="legend" class="legend"><h2> Legend</h2><img src="/assets/po.png"></img> <img src="/assets/or.png"></img> 
+    <img src="/assets/wm.png"></img><img src="/assets/mlt.png"></img> <pre id="debug"> </pre>
+</div>
+</div>
 
-
-<% part.mtrs.each do |mtr| %>
-<% mtrhash = { "mtrnum" => mtr.mtrnum, "odd" => mtr.odd, "ttip" => mtr.ttip, "ttype" => mtr.ttype, "mcount" => mcount } %>
-
-<%= raw mtr_tag(mtrhash) %>
-
-
-<% mcount = mcount + 1 %>
-<% end %><% pcount = pcount + 1 %>&nbsp;&nbsp;<%= pcount %> </p>
-<% end %>
-
-	<script language="JavaScript" type="text/javascript">
+<div id="part-list" class="plist">
+<%= render(:partial => 'population', :locals => {:parts => @parts} ) %>
+</div>
+<script language="JavaScript" type="text/javascript">
 <!--
 
 // this is simply a shortcut for the eyes and fingers
@@ -58,6 +53,7 @@ var _startX = 0;			// mouse starting positions
 var _startY = 0;
 var _offsetX = 0;			// current element offset
 var _offsetY = 0;
+var _offsetZ = 0;
 var _dragElement;			// needs to be passed from OnMouseDown to OnMouseMove
 var _oldZIndex = 0;			// we temporarily increase the z-index during drag
 var _debug = $('debug');	// makes life easier
@@ -97,6 +93,7 @@ function OnMouseDown(e)
 		// grab the clicked element's position
 		_offsetX = ExtractNumber(target.style.left);
 		_offsetY = ExtractNumber(target.style.top);
+		_offsetZ = ExtractNumber(target.style.zIndex);
 
 		// bring the clicked element to the front while it is being dragged
 		_oldZIndex = target.style.zIndex;
@@ -137,7 +134,7 @@ function OnMouseMove(e)
 	_dragElement.style.left = (_offsetX + e.clientX - _startX) + 'px';
 	//_dragElement.style.top = (_offsetY + e.clientY - _startY) + 'px';
 
-	_debug.innerHTML = '(' + _dragElement.style.left + ', ' + _dragElement.style.top + ')';
+	_debug.innerHTML = '(' + _dragElement.style.left + ', ' + _dragElement.style.top +', ' + _dragElement.style.zIndex +', ' + _offsetZ + ')';
 }
 
 function OnMouseUp(e)
@@ -154,13 +151,61 @@ function OnMouseUp(e)
 		// this is how we know we're not dragging
 		_dragElement = null;
 
-		_debug.innerHTML = 'mouse up';
+		_debug.innerHTML = 'mouse up '+ _oldZIndex + '*';
 	}
 }
+
 function PartData(pno)
 {
-  alert ('Part:'+pno);
+  alert ('Part:'+pno); return true;
 }
+
+function AppendAssyPartDiv(pno, new_stuff){
+  var eid = "assy-part-" + pno;
+  var msg = document.getElementById(eid);
+  var holder = msg.innerHTML;
+  msg.innerHTML = holder + "<br>" +new_stuff;
+}
+
+function ToggleShowAssyPart(pno, data){
+  var eid = "assy-part-" + pno;
+  var msg = document.getElementById(eid);
+  var cstate = msg.style.display;
+  AppendAssyPartDiv(pno, data);
+  //alert ('ToggleAssyPart:'+cstate);
+  if (cstate == "block") {
+    msg.style.display="none"; //block
+  } else {
+    msg.style.display="block"; //none
+  }
+}
+
+function StatwinPart(pno,desc,q0,aum,sim, mcount){
+  var wndw = document.getElementById("statwin");
+  var wndw2 = document.getElementById("statwin-titles");
+  wndw.innerHTML = '<table><tbody><tr><td width="10%">' + pno +'</td><td width="30%">' + desc +'</td><td width="5%">' + q0 + '</td><td width="5%">' + aum + '</td><td width="10%">' + sim +'</td><td width="20%">'+ mcount +'</td></tr></tbody></table>';
+  wndw2.innerHTML = '<table><thead><th width="10%">Part</th><th width="30%">Description</th><th width="5%">Initial Qty</th><th width="5%">AUM</th><th width="10%">SIM</th><th width="20%">MTRs:</th></thead></table>';
+}
+function StatwinMtr(mtr,vnd, q0,dq,q1,mdt,odd){
+  var wndw = document.getElementById("statwin");
+  var wndw2 = document.getElementById("statwin-titles");
+  wndw.innerHTML = '<table><tbody><tr><td width="25%">' + mtr +'</td><td width="25%">' + vnd +'</td><td width="10%">' + q0 + '</td><td width="10%">' + dq + '</td><td width="10%">' + q1 +'</td><td width="5%">'+ mdt +'</td><td width="10%">'+ odd +'</td></tr></tbody></table>';
+  wndw2.innerHTML = '<table><thead><th width="25%">MTR</th><th width="25%">Vendor</th><th width="10%">Inventory</th><th width="10%">dQ</th><th width="10%">Q1</th><th width="5%">Days</th><th width="10%">Days0</th></thead></table>';
+}
+function Junk(){
+  var msg = document.getElementById('part-list');
+  var cstate = msg.pageYOffset;
+  /*if (cstate == "block") {
+    msg.style.display="none"; //block
+  } else {
+    msg.style.display="block"; //none
+  } */
+  alert ('ScrollPosition:'+cstate);
+}
+function GetAssy(pno){
+  var junk = pno;
+}
+
 //-->
 	</script>
 

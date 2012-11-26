@@ -1,0 +1,29 @@
+<div id="#{divid}" class="assy-part">
+<% pcount = 0 ; mtrhash = {};mcount = 0;parthash = {} %>
+<% @parts.each do |part|%>
+  <% parthash = { "pnum" => part.part_id, "picount" => part.estock, "reddate" => part.negstkdate, "assy" => part.assy, "descr" => part.descr } %>
+  <p>
+
+  <% if part.assy %>
+    <!--                                                   , "onclick" => "ToggleShowAssyPart(#{part.part_id}),#{part.mtrs.count()})"                             -->
+    <%= label_tag part.part_id, part.part_id, "onmouseover" => "StatwinPart(#{part.part_id},#{part.mtrs.count()})", "onclick" => "ToggleShowAssyPart(#{part.part_id},#{part.mtrs.count()})", "title" =>"q0:#{part.estock}",  "class" => "label-assy" %>
+    <!--%= tag "input", { "type" => "button", "value" => "#{part.part_id}", "onmouseover" => "StatwinPart(#{part.part_id},#{part.mtrs.count()})", "onclick" => "ToggleShowAssyPart(#{part.part_id})",  "class" => "rounded-assy", "title" =>"q0:#{part.estock}"} %-->
+  <% else %>
+    <!--%= tag "input", { "type" => "button", "value" => "#{part.part_id}", "onmouseover" => "StatwinPart(#{part.part_id},#{part.mtrs.count()})", "class" => "rounded-corners", "title" =>"q0:#{part.estock}"} %-->
+    <%= label_tag part.part_id, part.part_id, "onmouseover" => "StatwinPart(#{part.part_id},#{part.mtrs.count()})", "title" =>"q0:#{part.estock}",  "class" => "label-part" %>
+  <% end %>
+
+  <% part.mtrs.each do |mtr| %>
+    <% mtrhash = { "mtrnum" => mtr.mtrnum, "odd" => mtr.odd.to_i, "ttip" => mtr.ttip, "ttype" => mtr.ttype, "pcount" => pcount.to_i, "picount" => part.estock } %>
+    <% if in_window(mtrhash) %>
+    <%= raw mtr_tag(mtrhash) %>
+    <% end %>
+
+    <% mcount = mcount + 1 %>
+  <% end %>
+  <%= label_tag pcount, pcount %><% pcount = pcount + 1 %> </p>
+  <% if part.assy %>
+    <%= raw assydiv_tag(part.part_id) %>
+  <% end %>
+<% end %>
+</div>

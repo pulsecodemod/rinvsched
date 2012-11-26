@@ -2,10 +2,13 @@ Rinvsched::Application.routes.draw do
   root :to => "parts#index"
 
 #devise_for :users
+match "/parts" => "parts#index"
+match "/parts/assy/:part_id" => "parts#assy"
 
-resources :parts do
-  resources :mtrs
-end
+#resources :parts do
+  #resources :mtrs
+#end
+
   # The priority is based upon order of creation:
   # first created -> highest priority.
 

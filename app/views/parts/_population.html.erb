@@ -1,0 +1,34 @@
+
+<% pcount = 0 ; mtrhash = {};parthash = {} %>
+<% @parts.each do |part|%>
+<% mcount = 0 %>
+  <% parthash = { "pnum" => part.part_id, "picount" => part.estock, "reddate" => part.negstkdate, "assy" => part.assy, "descr" => part.descr } %>
+  <!--p-->
+  <div id="<%=part.part_id%>" class="partline">
+<!-- This is only in the template partial "population"! -->
+  <% if part.assy %>
+    <!--                                                   , "onclick" => "ToggleShowAssyPart(#{part.part_id}),#{part.mtrs.count()})"                             -->
+    <!--%= label_tag part.part_id, part.part_id, "onmouseover" => "StatwinPart(#{part.part_id},'#{part.descr}',#{part.estock},#{part.avgusemonth},#{part.supinmonths},#{part.mtrs.count()})", "onclick" => "ToggleShowAssyPart(#{part.part_id},#{part.mtrs.count()})", "title" =>"q0:#{part.estock}",  "class" => "label-assy" %!-->
+    <!--%= link_to "#{part.part_id}",:update => "assy-part-#{part.part_id}", :action => "assy", :remote => true %-->
+    <!--%= link_to "#{part.part_id}", '/parts/assy/1019', :remote => true, :update => "assy-part-#{part.part_id}", :position => 'after' %-->
+    <%= link_to_function "#{part.part_id}", "ToggleShowAssyPart(#{part.part_id}, 'new stuff')", "onmouseover" => "StatwinPart(#{part.part_id},'#{part.descr}',#{part.estock},#{part.avgusemonth},#{part.supinmonths},#{part.mtrs.count()})" %>
+    <!--%= tag "input", { "type" => "button", "value" => "#{part.part_id}", "onmouseover" => "StatwinPart(#{part.part_id},#{part.mtrs.count()})", "onclick" => "ToggleShowAssyPart(#{part.part_id})",  "class" => "rounded-assy", "title" =>"q0:#{part.estock}"} %-->
+  <% else %>
+    <!--%= tag "input", { "type" => "button", "value" => "#{part.part_id}", "onmouseover" => "StatwinPart(#{part.part_id},#{part.mtrs.count()})", "class" => "rounded-corners", "title" =>"q0:#{part.estock}"} %-->
+    <%= label_tag part.part_id, part.part_id, "onmouseover" => "StatwinPart(#{part.part_id},'#{part.descr}',#{part.estock},#{part.avgusemonth},#{part.supinmonths},#{part.mtrs.count()})", "title" =>"q0:#{part.estock}",  "class" => "label-part" %>
+  <% end %>
+  <% part.mtrs.each do |mtr| %>
+    <% mtrhash = { "mtrnum" => mtr.mtrnum, "odd" => mtr.odd.to_i, "ttip" => mtr.ttip, "ttype" => mtr.ttype, "mdt" => mtr.mddate, "pcount" => pcount.to_i, "q0" => mtr.q0, "q1" => mtr.qafter, "vnd" => mtr.shop_name , "dq" => mtr.delta,"mcount" => mcount.to_i } %>
+    <% if in_window(mtrhash) %>
+    <%= raw mtr_tag(mtrhash) %>
+    <% end %>
+
+    <% mcount = mcount + 1 %>
+  <% end %>
+  <%= label_tag pcount, pcount, "class" => "label-part-pos" %><% pcount = pcount + 1 %>
+  </div>
+  <!--/p-->
+  <% if part.assy %>
+    <%= raw assydiv_tag(part.part_id) %>
+  <% end %>
+<% end %>

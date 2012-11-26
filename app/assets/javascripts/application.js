@@ -13,3 +13,10 @@
 //= require jquery
 //= require jquery_ujs
 //= require_tree .
+
+	<script language="JavaScript" type="text/javascript">
+<!--
+
+
+//-->
+	</script>
