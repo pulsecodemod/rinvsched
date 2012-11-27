@@ -15,7 +15,7 @@ module ApplicationHelper
    "<div>mtr:" + %&#{mtr["ttip"]}, #{mtr["vnd"]}, #{mtr["q0"]}, #{mtr["dq"]}, #{mtr["q1"]}, #{mtr["mdt"]}, #{mtr["odd"]}& +  "</div>"
   end
   def assydiv_tag(pno)
-    %&<div id="assy-part-#{pno}" class="assembly-parts">#{pno} is an assembly part.</div>&
+    %&<div id="assy-part-#{pno}" class="assembly-parts"> </div>&
   end
   def in_window(mtr)
     if ( mtr["odd"] < 60 )
@@ -23,5 +23,8 @@ module ApplicationHelper
     else
       return false
     end
+  end
+  def junk
+    %&<%= raw render :partial => "parts/assy", :locals => {:part_id => pno} %>&
   end
 end

@@ -167,11 +167,12 @@ function AppendAssyPartDiv(pno, new_stuff){
   msg.innerHTML = holder + "<br>" +new_stuff;
 }
 
-function ToggleShowAssyPart(pno, data){
+function ToggleShowAssyPart(pno){
   var eid = "assy-part-" + pno;
   var msg = document.getElementById(eid);
   var cstate = msg.style.display;
-  AppendAssyPartDiv(pno, data);
+  var partdata = GetAssy(pno);
+  AppendAssyPartDiv(pno, partdata);
   //alert ('ToggleAssyPart:'+cstate);
   if (cstate == "block") {
     msg.style.display="none"; //block
@@ -203,7 +204,8 @@ function Junk(){
   alert ('ScrollPosition:'+cstate);
 }
 function GetAssy(pno){
-  var junk = pno;
+  var junk = 'new data for ' + pno;
+  return junk;
 }
 
 //-->

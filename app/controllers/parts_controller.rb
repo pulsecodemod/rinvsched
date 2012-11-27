@@ -6,7 +6,7 @@ class PartsController < ApplicationController
 
   
   def assy
-    @parts = Part.assy_parts(:part_id )
+    @parts = Part.assy_parts(:part_id => :part_id)
     #@parts = Part.find(:all, :conditions => ["part_id in ('1018','1020','1021','1032','1057','1158','1815')"], :order => :part_id)
     #render :partial => "parts/assy",
     #  :locals => { :parts => @parts,
@@ -24,7 +24,7 @@ class PartsController < ApplicationController
   end
   def assy2
     #@parts = Part.assy_parts(params[:part_id])
-    @parts = Part.find(:all, :conditions => ["part_id in (?)", 1042..1100], :order => :part_id)
+    @parts = Part.find(:all, :conditions => ["part_id in (?)", params[:part_id]], :order => :part_id)
     render :partial => "parts/assy2",
       :locals => { :parts => @parts }
   end

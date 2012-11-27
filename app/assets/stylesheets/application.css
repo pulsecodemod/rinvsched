@@ -131,7 +131,7 @@ a:hover, a:active {
 
 .drag2 {position: relative; cursor: move; z-index:1;}
 .assembly-parts {
-    display: none;
+    /*display: none;*/
     background: lightgray;
 }
 
