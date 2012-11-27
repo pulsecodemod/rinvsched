@@ -25,5 +25,7 @@ class PartsController < ApplicationController
   def assy2
     #@parts = Part.assy_parts(params[:part_id])
     @parts = Part.find(:all, :conditions => ["part_id in (?)", 1042..1100], :order => :part_id)
+    render :partial => "parts/assy2",
+      :locals => { :parts => @parts }
   end
 end

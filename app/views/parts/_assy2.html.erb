@@ -1,0 +1,12 @@
+<div id="assy-div" class="assy-part">
+<% pcount = 0 ; mtrhash = {};mcount = 0;parthash = {} %>
+<% @parts.each do |part|%>
+  <% parthash = { "pnum" => part.part_id, "picount" => part.estock, "reddate" => part.negstkdate, "assy" => part.assy, "descr" => part.descr } %>
+  <p>
+
+  <%= label_tag part.part_id, part.part_id, "onmouseover" => "StatwinPart(#{part.part_id},#{part.mtrs.count()})", "title" =>"q0:#{part.estock}",  "class" => "label-part" %>
+
+ 
+  <%= label_tag part.mtrs.count(), part.mtrs.count() %><% pcount = pcount + 1 %> </p>
+<% end %>
+</div>

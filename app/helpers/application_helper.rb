@@ -18,7 +18,7 @@ module ApplicationHelper
     %&<div id="assy-part-#{pno}" class="assembly-parts">#{pno} is an assembly part.</div>&
   end
   def in_window(mtr)
-    if ( mtr["pcount"] < 200 )
+    if ( mtr["odd"] < 60 )
       return true
     else
       return false

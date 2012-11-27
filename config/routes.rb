@@ -4,6 +4,7 @@ Rinvsched::Application.routes.draw do
 #devise_for :users
 match "/parts" => "parts#index"
 match "/parts/assy/:part_id" => "parts#assy"
+match "/parts/assy2" => "parts#assy2"
 
 #resources :parts do
   #resources :mtrs
